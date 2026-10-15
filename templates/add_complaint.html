@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card p-5 border-0 shadow-lg rounded-4">
+            <h1 class="h3 fw-bold text-center mb-5 text-danger">Report a Community Issue</h1>
+            <p class="text-center text-muted mb-4 small">Please provide as much detail as possible to help us address the issue efficiently.</p>
+            <form method="post" enctype="multipart/form-data" class="needs-validation">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-medium">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text mt-2 text-muted small">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="text-danger small mt-2">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="d-grid mt-5 pt-3">
+                    <button type="submit" class="btn btn-primary py-3 rounded-pill fs-5 fw-bold shadow-sm">
+                        Submit Complaint
+                    </button>
+                    <a href="{% url 'home' %}" class="btn btn-link text-secondary mt-3 text-center">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

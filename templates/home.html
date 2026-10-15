@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<header class="mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1 class="display-5 fw-bold mb-3">{% trans "Community Watch & Resolve" %}</h1>
+            <p class="lead text-muted">{% trans "Report issues in your neighborhood and monitor their resolution status. We're here to protect your rights." %}</p>
+        </div>
+        <div class="col-lg-5 text-lg-end">
+            <a href="{% url 'add_complaint' %}" class="btn btn-primary btn-lg rounded-pill shadow-sm px-5">{% trans "Report an Issue" %}</a>
+        </div>
+    </div>
+</header>
+
+<!-- Status Panel / Dashboard -->
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4 mb-5">
+    <div class="col">
+        <div class="card p-3 border-0 shadow-sm text-center bg-white h-100">
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-list-task text-secondary fs-5"></i>
+            </div>
+            <div class="text-secondary small text-uppercase mb-1 fw-bold">{% trans "Total Issues" %}</div>
+            <div class="h3 fw-bold mb-0 text-dark">{{ stats.total }}</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 border-0 shadow-sm text-center border-bottom border-danger border-4 h-100">
+            <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-exclamation-circle text-danger fs-5"></i>
+            </div>
+            <div class="text-danger small text-uppercase mb-1 fw-bold">{% trans "Pending" %}</div>
+            <div class="h3 fw-bold mb-0 text-danger">{{ stats.open }}</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 border-0 shadow-sm text-center border-bottom border-warning border-4 h-100">
+            <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-search text-warning fs-5"></i>
+            </div>
+            <div class="text-warning small text-uppercase mb-1 fw-bold">{% trans "Under Review" %}</div>
+            <div class="h3 fw-bold mb-0 text-warning">{{ stats.investigating }}</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 border-0 shadow-sm text-center border-bottom border-info border-4 h-100">
+            <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-tools text-info fs-5"></i>
+            </div>
+            <div class="text-info small text-uppercase mb-1 fw-bold">{% trans "Work Going On" %}</div>
+            <div class="h3 fw-bold mb-0 text-info">{{ stats.in_progress }}</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 border-0 shadow-sm text-center border-bottom border-success border-4 h-100">
+            <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                <i class="bi bi-check2-circle text-success fs-5"></i>
+            </div>
+            <div class="text-success small text-uppercase mb-1 fw-bold">{% trans "Resolved" %}</div>
+            <div class="h3 fw-bold mb-0 text-success">{{ stats.resolved }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Map Section -->
+<div class="card mb-5 border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-map me-2 text-primary"></i>Nearby Complaints</h5>
+        <span class="badge bg-light text-dark rounded-pill fw-normal">Centered on Odisha</span>
+    </div>
+    <div id="map"></div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for complaint in complaints %}
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
+            {% if complaint.image %}
+            <img src="{{ complaint.image.url }}" class="card-img-top" alt="{{ complaint.title }}" style="height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <i class="bi {{ complaint.category.icon }} display-1 text-secondary opacity-50"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge rounded-pill {% if complaint.urgency == 'high' %}bg-danger{% elif complaint.urgency == 'medium' %}bg-warning text-dark{% else %}bg-info{% endif %} px-3 py-2 fw-medium">
+                        {{ complaint.get_urgency_display }} Priority
+                    </span>
+                    <small class="text-muted"><i class="bi bi-tag me-1"></i>{{ complaint.category.name }}</small>
+                </div>
+                <h5 class="card-title fw-bold">{{ complaint.title }}</h5>
+                <p class="card-text text-muted mb-4">{{ complaint.description|truncatewords:20 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                    <div>
+                        <i class="bi bi-geo-alt text-primary me-1"></i>
+                        <span class="text-secondary small">{{ complaint.location_address }}</span>
+                    </div>
+                    <a href="{% url 'complaint_detail' complaint.pk %}" class="btn btn-outline-danger btn-sm rounded-pill px-4">See More</a>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 pb-3">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></div>
+                    <small class="text-primary fw-bold">{{ complaint.get_status_display }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="display-1 text-muted opacity-25 mb-4">
+            <i class="bi bi-chat-left-dots"></i>
+        </div>
+        <h3>No complaints reported yet</h3>
+        <p class="text-muted">Be the first to help your community by reporting an issue.</p>
+        <a href="{% url 'add_complaint' %}" class="btn btn-primary mt-3">File First Complaint</a>
+    </div>
+    {% endfor %}
+</div>
+
+{{ map_data_json|json_script:"map-data" }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var map = L.map('map').setView([20.9517, 84.8034], 7); // Center of Odisha
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var complaints = JSON.parse(document.getElementById('map-data').textContent);
+        var markers = [];
+
+        complaints.forEach(function(c) {
+            var marker = L.marker([c.lat, c.lng]).addTo(map);
+            var popupContent = '<div class="p-2">' +
+                               '<h6 class="fw-bold mb-1">' + c.title + '</h6>' +
+                               '<p class="mb-2 small text-muted">Status: <strong>' + c.status + '</strong></p>' +
+                               '<a href="/complaint/' + c.id + '/" class="btn btn-sm btn-danger text-white rounded-pill px-3">Details</a>' +
+                               '</div>';
+            marker.bindPopup(popupContent);
+            markers.push(marker);
+        });
+
+        if (markers.length > 0) {
+            var group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds());
+        }
+    });
+</script>
+{% endblock %}
